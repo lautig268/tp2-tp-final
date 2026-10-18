@@ -1,0 +1,14 @@
+### 1. Válida: debería dar 201
+POST http://localhost:3000/prueba
+Content-Type: application/json
+
+{ "numero": "101", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
+
+### 2. Inválida: debería dar 400 con details
+POST http://localhost:3000/prueba
+Content-Type: application/json
+
+{ "numero": "", "tipo": "penthouse", "capacidad": 0 }
+
+### 3. Ruta inexistente: debería dar 404
+GET http://localhost:3000/nada
