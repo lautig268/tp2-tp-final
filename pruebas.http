@@ -1,14 +1,65 @@
-### 1. Válida: debería dar 201
-POST http://localhost:3000/prueba
+### 1. Crear habitación 101 → 201
+POST http://localhost:3000/habitaciones
 Content-Type: application/json
 
 { "numero": "101", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
 
-### 2. Inválida: debería dar 400 con details
-POST http://localhost:3000/prueba
+### 2. Crear la misma de nuevo → 409 NUMERO_DUPLICADO
+POST http://localhost:3000/habitaciones
+Content-Type: application/json
+
+{ "numero": "101", "tipo": "simple", "capacidad": 1, "precioPorNoche": 50000 }
+
+### 3. Crear habitación 102 → 201
+POST http://localhost:3000/habitaciones
+Content-Type: application/json
+
+{ "numero": "102", "tipo": "suite", "capacidad": 4, "precioPorNoche": 150000 }
+
+### 4. Body inválido → 400 VALIDACION
+POST http://localhost:3000/habitaciones
 Content-Type: application/json
 
 { "numero": "", "tipo": "penthouse", "capacidad": 0 }
 
-### 3. Ruta inexistente: debería dar 404
-GET http://localhost:3000/nada
+### 5. Listar todas → 200 con 2 habitaciones
+GET http://localhost:3000/habitaciones
+
+### 6. Filtrar por tipo → 200 con 1 habitación
+GET http://localhost:3000/habitaciones?tipo=suite
+
+### 7. Filtro inválido → 400
+GET http://localhost:3000/habitaciones?tipo=penthouse
+
+### 8. Obtener la 1 → 200
+GET http://localhost:3000/habitaciones/1
+
+### 9. Id que no existe → 404 HABITACION_NO_ENCONTRADA
+GET http://localhost:3000/habitaciones/99
+
+### 10. Id inválido → 400
+GET http://localhost:3000/habitaciones/abc
+
+### 11. Actualizar el precio de la 1 → 200
+PUT http://localhost:3000/habitaciones/1
+Content-Type: application/json
+
+{ "precioPorNoche": 90000 }
+
+### 12. Cambiar el número de la 1 al de la 102 → 409
+PUT http://localhost:3000/habitaciones/1
+Content-Type: application/json
+
+{ "numero": "102" }
+
+### 13. PUT con body vacío → 400
+PUT http://localhost:3000/habitaciones/1
+Content-Type: application/json
+
+{}
+
+### 14. Eliminar la 1 → 204 sin contenido
+DELETE http://localhost:3000/habitaciones/1
+
+### 15. Eliminarla otra vez → 404
+DELETE http://localhost:3000/habitaciones/1
