@@ -63,3 +63,84 @@ DELETE http://localhost:3000/habitaciones/1
 
 ### 15. Eliminarla otra vez → 404
 DELETE http://localhost:3000/habitaciones/1
+
+### R1. Crear habitación para las reservas → 201 (id 1)
+POST http://localhost:3000/habitaciones
+Content-Type: application/json
+
+{ "numero": "101", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
+
+### R2. Reserva del 10 al 15 → 201, estado "confirmada"
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-10", "fechaSalida": "2026-12-15" }
+
+### R3. Se superpone (12 al 14) → 409 FECHAS_OCUPADAS
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Luis Gómez", "emailHuesped": "luis@mail.com", "fechaEntrada": "2026-12-12", "fechaSalida": "2026-12-14" }
+
+### R4. Se superpone por el borde (5 al 11) → 409
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Luis Gómez", "emailHuesped": "luis@mail.com", "fechaEntrada": "2026-12-05", "fechaSalida": "2026-12-11" }
+
+### R5. Entra el día que Ana sale (15 al 20) → 201
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Luis Gómez", "emailHuesped": "luis@mail.com", "fechaEntrada": "2026-12-15", "fechaSalida": "2026-12-20" }
+
+### R6. Sale el día que Ana entra (1 al 10) → 201
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Marta Ruiz", "emailHuesped": "marta@mail.com", "fechaEntrada": "2026-12-01", "fechaSalida": "2026-12-10" }
+
+### R7. Habitación que no existe → 404 HABITACION_NO_ENCONTRADA
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 99, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-10", "fechaSalida": "2026-12-15" }
+
+### R8. Salida anterior a la entrada → 400
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-20", "fechaSalida": "2026-12-18" }
+
+### R9. Fecha imposible → 400
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2027-02-30", "fechaSalida": "2027-03-05" }
+
+### R10. Cancelar la reserva 1 → 200, estado "cancelada"
+PUT http://localhost:3000/reservas/1
+Content-Type: application/json
+
+{ "estado": "cancelada" }
+
+### R11. Ahora el 12 al 14 está libre → 201 (reserva 4)
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Luis Gómez", "emailHuesped": "luis@mail.com", "fechaEntrada": "2026-12-12", "fechaSalida": "2026-12-14" }
+
+### R12. Reactivar la reserva 1 (ya ocupada por la 4) → 409
+PUT http://localhost:3000/reservas/1
+Content-Type: application/json
+
+{ "estado": "confirmada" }
+
+### R13. Listar solo las canceladas → 200 con 1 reserva
+GET http://localhost:3000/reservas?estado=cancelada
+
+### R14. Listar las de la habitación 1 → 200 con 4 reservas
+GET http://localhost:3000/reservas?habitacionId=1
+
+### R15. Eliminar la reserva 1 → 204
+DELETE http://localhost:3000/reservas/1
