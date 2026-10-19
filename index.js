@@ -7,10 +7,10 @@ import errorHandler from "./middlewares/errorHandler.js";
 const app = express();
 
 app.use(express.json());
-app.use(buildContainer());
+app.use(await buildContainer());
 app.use(notFound);
 app.use(errorHandler);
 
 app.listen(config.port, () => {
-  console.log(`Servidor en http://localhost:${config.port}`);
+  console.log(`Servidor en http://localhost:${config.port} (persistencia: ${config.persistenceType})`);
 });

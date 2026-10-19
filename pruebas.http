@@ -186,3 +186,9 @@ POST http://localhost:3000/reservas
 Content-Type: application/json
 
 { "habitacionId": 1, "huesped": "Luis Gómez", "emailHuesped": "luis@mail.com", "fechaEntrada": "2026-12-12", "fechaSalida": "2026-12-14" }
+
+### Listar todas las reservas → 200
+GET http://localhost:3000/reservas
+
+### Listar todas las habitaciones → 200
+GET http://localhost:3000/habitaciones

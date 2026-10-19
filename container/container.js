@@ -1,11 +1,9 @@
 import { Router } from "express";
 
+import createDaos from "../dao/daoFactory.js";
 import createEventBus from "../events/eventBus.js";
 import consoleNotifier from "../notifications/consoleNotifier.js";
 import registerAlertListeners from "../alerts/registerAlertListeners.js";
-
-import habitacionesMemoryDao from "../dao/habitacionesMemoryDao.js";
-import reservasMemoryDao from "../dao/reservasMemoryDao.js";
 
 import makeHabitacionUseCases from "../usecases/habitaciones/makeHabitacionUseCases.js";
 import makeReservaUseCases from "../usecases/reservas/makeReservaUseCases.js";
@@ -16,10 +14,9 @@ import ReservasController from "../controllers/ReservasController.js";
 import makeHabitacionesRouter from "../routes/habitacionesRoutes.js";
 import makeReservasRouter from "../routes/reservasRoutes.js";
 
-function buildContainer() {
-  // 1. Persistencia (por ahora, solo memoria)
-  const habitacionDao = habitacionesMemoryDao;
-  const reservaDao = reservasMemoryDao;
+async function buildContainer() {
+  // 1. Persistencia: la factory elige según PERSISTENCE_TYPE
+  const { habitacionDao, reservaDao } = await createDaos();
 
   // 2. Eventos: un único bus, un notificador y quién escucha
   const events = createEventBus();
