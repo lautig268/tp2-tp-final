@@ -1,7 +1,7 @@
 import AppError from "../../errors/AppError.js";
 
-async function getHabitacionById(id, dao) {
-  const habitacion = await dao.getById(id);
+async function getHabitacionById(id, { habitacionDao }) {
+  const habitacion = await habitacionDao.getById(id);
 
   if (!habitacion) {
     throw new AppError("HABITACION_NO_ENCONTRADA", `No existe la habitación con id ${id}`, 404);

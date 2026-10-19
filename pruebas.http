@@ -144,3 +144,27 @@ GET http://localhost:3000/reservas?habitacionId=1
 
 ### R15. Eliminar la reserva 1 → 204
 DELETE http://localhost:3000/reservas/1
+
+### H1. Crear habitación → 201 (id 1)
+POST http://localhost:3000/habitaciones
+Content-Type: application/json
+
+{ "numero": "201", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
+
+### H2. Crear reserva en esa habitación → 201 (id 1)
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-10", "fechaSalida": "2026-12-15" }
+
+### H3. Eliminar la habitación con reservas → 409 HABITACION_CON_RESERVAS
+DELETE http://localhost:3000/habitaciones/1
+
+### H4. Eliminar la reserva → 204
+DELETE http://localhost:3000/reservas/1
+
+### H5. Ahora la habitación se puede eliminar → 204
+DELETE http://localhost:3000/habitaciones/1
+
+### H6. Eliminarla otra vez → 404 HABITACION_NO_ENCONTRADA
+DELETE http://localhost:3000/habitaciones/1

@@ -1,7 +1,7 @@
 import AppError from "../../errors/AppError.js";
 
-async function createHabitacion(data, dao) {
-  const existente = await dao.getByNumero(data.numero);
+async function createHabitacion(data, { habitacionDao }) {
+  const existente = await habitacionDao.getByNumero(data.numero);
 
   if (existente) {
     throw new AppError(
@@ -11,7 +11,7 @@ async function createHabitacion(data, dao) {
     );
   }
 
-  return dao.save(data);
+  return habitacionDao.save(data);
 }
 
 export default createHabitacion;

@@ -1,7 +1,7 @@
 import AppError from "../../errors/AppError.js";
 
-async function updateHabitacion(id, changes, dao) {
-  const actual = await dao.getById(id);
+async function updateHabitacion(id, changes, { habitacionDao }) {
+  const actual = await habitacionDao.getById(id);
 
   if (!actual) {
     throw new AppError("HABITACION_NO_ENCONTRADA", `No existe la habitación con id ${id}`, 404);
@@ -9,7 +9,7 @@ async function updateHabitacion(id, changes, dao) {
 
   // Si cambia el número, no puede chocar con el de otra habitación
   if (changes.numero !== undefined && changes.numero !== actual.numero) {
-    const duplicada = await dao.getByNumero(changes.numero);
+    const duplicada = await habitacionDao.getByNumero(changes.numero);
 
     if (duplicada) {
       throw new AppError(
@@ -20,7 +20,7 @@ async function updateHabitacion(id, changes, dao) {
     }
   }
 
-  return dao.update(id, changes);
+  return habitacionDao.update(id, changes);
 }
 
 export default updateHabitacion;

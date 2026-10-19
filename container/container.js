@@ -18,7 +18,7 @@ function buildContainer() {
   const reservaDao = reservasMemoryDao;
 
   // 2. Casos de uso con sus dependencias inyectadas
-  const habitacionUseCases = makeHabitacionUseCases(habitacionDao);
+  const habitacionUseCases = makeHabitacionUseCases({ habitacionDao, reservaDao });
   const reservaUseCases = makeReservaUseCases({ reservaDao, habitacionDao });
 
   // 3. Controladores con los casos de uso inyectados
