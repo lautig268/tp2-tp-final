@@ -1,5 +1,9 @@
 import { Router } from "express";
 
+import createEventBus from "../events/eventBus.js";
+import consoleNotifier from "../notifications/consoleNotifier.js";
+import registerAlertListeners from "../alerts/registerAlertListeners.js";
+
 import habitacionesMemoryDao from "../dao/habitacionesMemoryDao.js";
 import reservasMemoryDao from "../dao/reservasMemoryDao.js";
 
@@ -17,15 +21,20 @@ function buildContainer() {
   const habitacionDao = habitacionesMemoryDao;
   const reservaDao = reservasMemoryDao;
 
-  // 2. Casos de uso con sus dependencias inyectadas
-  const habitacionUseCases = makeHabitacionUseCases({ habitacionDao, reservaDao });
-  const reservaUseCases = makeReservaUseCases({ reservaDao, habitacionDao });
+  // 2. Eventos: un único bus, un notificador y quién escucha
+  const events = createEventBus();
+  const notifier = consoleNotifier;
+  registerAlertListeners(events, notifier);
 
-  // 3. Controladores con los casos de uso inyectados
+  // 3. Casos de uso con sus dependencias inyectadas
+  const habitacionUseCases = makeHabitacionUseCases({ habitacionDao, reservaDao });
+  const reservaUseCases = makeReservaUseCases({ reservaDao, habitacionDao, events });
+
+  // 4. Controladores con los casos de uso inyectados
   const habitacionesController = new HabitacionesController(habitacionUseCases);
   const reservasController = new ReservasController(reservaUseCases);
 
-  // 4. Router principal con las rutas montadas
+  // 5. Router principal con las rutas montadas
   const router = Router();
   router.use("/habitaciones", makeHabitacionesRouter(habitacionesController));
   router.use("/reservas", makeReservasRouter(reservasController));

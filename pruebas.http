@@ -168,3 +168,21 @@ DELETE http://localhost:3000/habitaciones/1
 
 ### H6. Eliminarla otra vez → 404 HABITACION_NO_ENCONTRADA
 DELETE http://localhost:3000/habitaciones/1
+
+### E1. Crear habitación → 201 (id 1)
+POST http://localhost:3000/habitaciones
+Content-Type: application/json
+
+{ "numero": "301", "tipo": "suite", "capacidad": 4, "precioPorNoche": 150000 }
+
+### E2. Crear reserva → 201, y en la terminal debe aparecer la notificación
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-10", "fechaSalida": "2026-12-15" }
+
+### E3. Reserva en conflicto → 409, y NO debe aparecer ninguna notificación
+POST http://localhost:3000/reservas
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Luis Gómez", "emailHuesped": "luis@mail.com", "fechaEntrada": "2026-12-12", "fechaSalida": "2026-12-14" }
