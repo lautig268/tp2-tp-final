@@ -68,7 +68,7 @@ DELETE http://localhost:3000/habitaciones/1
 POST http://localhost:3000/habitaciones
 Content-Type: application/json
 
-{ "numero": "101", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
+{ "numero": "301", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
 
 ### R2. Reserva del 10 al 15 → 201, estado "confirmada"
 POST http://localhost:3000/reservas
