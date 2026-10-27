@@ -1,12 +1,14 @@
 import AppError from "../../errors/AppError.js";
-import { hayConflicto } from "./reglas.js";
+import { hayConflicto, verificarDueno } from "./reglas.js";
 
-async function updateReserva(id, changes, { reservaDao }) {
+async function updateReserva(id, changes, actor, { reservaDao }) {
   const actual = await reservaDao.getById(id);
 
   if (!actual) {
     throw new AppError("RESERVA_NO_ENCONTRADA", `No existe la reserva con id ${id}`, 404);
   }
+
+  verificarDueno(actual, actor);
 
   // Si una reserva cancelada vuelve a confirmarse, esas fechas pudieron ocuparse mientras tanto
   if (changes.estado === "confirmada" && actual.estado === "cancelada") {

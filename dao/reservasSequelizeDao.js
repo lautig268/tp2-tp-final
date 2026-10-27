@@ -1,10 +1,11 @@
 import { ReservaModel } from "./models/index.js";
 
 const reservasSequelizeDao = {
-  async getAll(filters = {}) {
+    async getAll(filters = {}) {
     const where = {};
     if (filters.habitacionId) where.habitacionId = filters.habitacionId;
     if (filters.estado) where.estado = filters.estado;
+    if (filters.usuarioId) where.usuarioId = filters.usuarioId;
 
     return ReservaModel.findAll({ where, order: [["id", "ASC"]], raw: true });
   },

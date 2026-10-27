@@ -41,5 +41,6 @@ export const actualizarReservaSchema = z
 
 export const listarReservasQuerySchema = z.object({
   habitacionId: z.coerce.number().int().positive().optional(),
+  usuarioId: z.coerce.number().int().positive().optional(),
   estado: z.enum(ESTADOS, { message: "El estado debe ser confirmada o cancelada" }).optional(),
 });

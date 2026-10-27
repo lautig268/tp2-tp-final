@@ -2,7 +2,7 @@ import AppError from "../../errors/AppError.js";
 import EVENTS from "../../events/eventNames.js";
 import { hayConflicto } from "./reglas.js";
 
-async function createReserva(data, { reservaDao, habitacionDao, events }) {
+async function createReserva(data, actor, { reservaDao, habitacionDao, events }) {
   const habitacion = await habitacionDao.getById(data.habitacionId);
 
   if (!habitacion) {
@@ -23,7 +23,11 @@ async function createReserva(data, { reservaDao, habitacionDao, events }) {
     );
   }
 
-  const reserva = await reservaDao.save({ ...data, estado: "confirmada" });
+  const reserva = await reservaDao.save({
+    ...data,
+    usuarioId: actor.id,
+    estado: "confirmada",
+  });
 
   events.emit(EVENTS.RESERVA_CONFIRMADA, {
     reservaId: reserva.id,

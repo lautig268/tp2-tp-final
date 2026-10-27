@@ -2,10 +2,11 @@ let reservas = [];
 let nextId = 1;
 
 const reservasMemoryDao = {
-  async getAll(filters = {}) {
+    async getAll(filters = {}) {
     return reservas
       .filter((r) => !filters.habitacionId || r.habitacionId === filters.habitacionId)
       .filter((r) => !filters.estado || r.estado === filters.estado)
+      .filter((r) => !filters.usuarioId || r.usuarioId === filters.usuarioId)
       .map((r) => ({ ...r }));
   },
 

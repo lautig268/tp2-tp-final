@@ -9,11 +9,20 @@ HabitacionModel.hasMany(ReservaModel, {
   as: "reservas",
   onDelete: "RESTRICT",
 });
-
-// Cada Reserva pertenece a una Habitación
 ReservaModel.belongsTo(HabitacionModel, {
   foreignKey: "habitacionId",
   as: "habitacion",
+});
+
+// Un Usuario tiene muchas Reservas
+UsuarioModel.hasMany(ReservaModel, {
+  foreignKey: "usuarioId",
+  as: "reservas",
+  onDelete: "RESTRICT",
+});
+ReservaModel.belongsTo(UsuarioModel, {
+  foreignKey: "usuarioId",
+  as: "usuario",
 });
 
 export { sequelize, HabitacionModel, ReservaModel, UsuarioModel };

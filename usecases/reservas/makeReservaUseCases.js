@@ -6,11 +6,11 @@ import deleteReserva from "./deleteReserva.js";
 
 function makeReservaUseCases(deps) {
   return {
-    getReservas: (filters) => getReservas(filters, deps),
-    getReservaById: (id) => getReservaById(id, deps),
-    createReserva: (data) => createReserva(data, deps),
-    updateReserva: (id, changes) => updateReserva(id, changes, deps),
-    deleteReserva: (id) => deleteReserva(id, deps),
+    getReservas: (filters, actor) => getReservas(filters, actor, deps),
+    getReservaById: (id, actor) => getReservaById(id, actor, deps),
+    createReserva: (data, actor) => createReserva(data, actor, deps),
+    updateReserva: (id, changes, actor) => updateReserva(id, changes, actor, deps),
+    deleteReserva: (id, actor) => deleteReserva(id, actor, deps),
   };
 }
 

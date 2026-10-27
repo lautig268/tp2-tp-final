@@ -331,3 +331,107 @@ Content-Type: application/json
 ### Ver las reservas de la habitación 101
 GET http://localhost:3000/reservas?habitacionId=2
 Authorization: Bearer {{loginHuesped.response.body.token}}
+
+### D1. Login admin
+# @name loginAdmin
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "admin@hotel.com", "password": "Admin12345" }
+
+### D2. Registrar a Ana → 201 (id 2)
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "nombre": "Ana Pérez", "email": "ana@mail.com", "password": "Clave12345" }
+
+### D3. Registrar a Luis → 201 (id 3)
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "nombre": "Luis Gómez", "email": "luis@mail.com", "password": "Clave12345" }
+
+### D4. Login de Ana
+# @name loginAna
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "ana@mail.com", "password": "Clave12345" }
+
+### D5. Login de Luis
+# @name loginLuis
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "luis@mail.com", "password": "Clave12345" }
+
+### D6. El admin crea la habitación 101 → 201 (id 1)
+POST http://localhost:3000/habitaciones
+Authorization: Bearer {{loginAdmin.response.body.token}}
+Content-Type: application/json
+
+{ "numero": "101", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
+
+### D7. Ana reserva → 201, con "usuarioId": 2
+POST http://localhost:3000/reservas
+Authorization: Bearer {{loginAna.response.body.token}}
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-10", "fechaSalida": "2026-12-15" }
+
+### D8. Luis reserva → 201, con "usuarioId": 3
+POST http://localhost:3000/reservas
+Authorization: Bearer {{loginLuis.response.body.token}}
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Luis Gómez", "emailHuesped": "luis@mail.com", "fechaEntrada": "2026-12-20", "fechaSalida": "2026-12-25" }
+
+### D9. Ana lista → solo SU reserva (1 elemento)
+GET http://localhost:3000/reservas
+Authorization: Bearer {{loginAna.response.body.token}}
+
+### D10. Ana intenta espiar a Luis con ?usuarioId=3 → sigue viendo SOLO la suya
+GET http://localhost:3000/reservas?usuarioId=3
+Authorization: Bearer {{loginAna.response.body.token}}
+
+### D11. El admin lista → las 2 reservas
+GET http://localhost:3000/reservas
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### D12. El admin filtra por usuarioId=3 → solo la de Luis
+GET http://localhost:3000/reservas?usuarioId=3
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### D13. Ana ve su reserva → 200
+GET http://localhost:3000/reservas/1
+Authorization: Bearer {{loginAna.response.body.token}}
+
+### D14. Ana ve la reserva de Luis → 403 FORBIDDEN
+GET http://localhost:3000/reservas/2
+Authorization: Bearer {{loginAna.response.body.token}}
+
+### D15. Ana cancela la reserva de Luis → 403
+PUT http://localhost:3000/reservas/2
+Authorization: Bearer {{loginAna.response.body.token}}
+Content-Type: application/json
+
+{ "estado": "cancelada" }
+
+### D16. Ana borra la reserva de Luis → 403
+DELETE http://localhost:3000/reservas/2
+Authorization: Bearer {{loginAna.response.body.token}}
+
+### D17. Reserva inexistente → 404 RESERVA_NO_ENCONTRADA
+GET http://localhost:3000/reservas/99
+Authorization: Bearer {{loginAna.response.body.token}}
+
+### D18. Ana cancela la suya → 200, estado "cancelada"
+PUT http://localhost:3000/reservas/1
+Authorization: Bearer {{loginAna.response.body.token}}
+Content-Type: application/json
+
+{ "estado": "cancelada" }
+
+### D19. El admin ve la reserva de Luis → 200
+GET http://localhost:3000/reservas/2
+Authorization: Bearer {{loginAdmin.response.body.token}}

@@ -1,11 +1,14 @@
 import AppError from "../../errors/AppError.js";
+import { verificarDueno } from "./reglas.js";
 
-async function getReservaById(id, { reservaDao }) {
+async function getReservaById(id, actor, { reservaDao }) {
   const reserva = await reservaDao.getById(id);
 
   if (!reserva) {
     throw new AppError("RESERVA_NO_ENCONTRADA", `No existe la reserva con id ${id}`, 404);
   }
+
+  verificarDueno(reserva, actor);
 
   return reserva;
 }

@@ -7,6 +7,7 @@ ReservaModel.init(
   {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     habitacionId: { type: DataTypes.INTEGER, allowNull: false },
+    usuarioId: { type: DataTypes.INTEGER, allowNull: false },
     huesped: { type: DataTypes.STRING, allowNull: false },
     emailHuesped: { type: DataTypes.STRING, allowNull: false },
     fechaEntrada: { type: DataTypes.STRING, allowNull: false },
