@@ -192,3 +192,142 @@ GET http://localhost:3000/reservas
 
 ### Listar todas las habitaciones → 200
 GET http://localhost:3000/habitaciones
+
+### A1. Registro válido → 201, rol "huesped" y SIN passwordHash
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "nombre": "Ana Pérez", "email": "Ana@Mail.com", "password": "Clave12345" }
+
+### A2. Mismo email → 409 EMAIL_DUPLICADO
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "nombre": "Otra Ana", "email": "ana@mail.com", "password": "Clave12345" }
+
+### A3. Contraseña corta y email inválido → 400 con details
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "nombre": "Luis", "email": "luis", "password": "123" }
+
+### A4. Intento de escalada: manda rol admin → 201 pero rol "huesped"
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "nombre": "Intruso", "email": "intruso@mail.com", "password": "Clave12345", "rol": "admin" }
+
+### A5. Login correcto → 200 con token y user
+# @name login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "ana@mail.com", "password": "Clave12345" }
+
+### A6. Contraseña incorrecta → 401 INVALID_CREDENTIALS
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "ana@mail.com", "password": "equivocada" }
+
+### A7. Email que no existe → 401 con el MISMO mensaje que A6
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "nadie@mail.com", "password": "Clave12345" }
+
+### A8. Perfil sin token → 401 TOKEN_MISSING
+GET http://localhost:3000/auth/me
+
+### A9. Perfil con el token del login A5 → 200
+GET http://localhost:3000/auth/me
+Authorization: Bearer {{login.response.body.token}}
+
+### A10. Perfil con token alterado → 401 TOKEN_INVALID
+GET http://localhost:3000/auth/me
+Authorization: Bearer {{login.response.body.token}}x
+
+### A11. Login del admin sembrado → 200, rol "admin"
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "admin@hotel.com", "password": "Admin12345" }
+
+### T1. Login del admin
+# @name loginAdmin
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "admin@hotel.com", "password": "Admin12345" }
+
+### T2. Registrar un huésped (si ya existe, da 409 y no pasa nada)
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "nombre": "Ana Pérez", "email": "ana@mail.com", "password": "Clave12345" }
+
+### T3. Login del huésped
+# @name loginHuesped
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "email": "ana@mail.com", "password": "Clave12345" }
+
+### P1. Listar habitaciones SIN token → 200 (es público)
+GET http://localhost:3000/habitaciones
+
+### P2. Crear habitación SIN token → 401 TOKEN_MISSING
+POST http://localhost:3000/habitaciones
+Content-Type: application/json
+
+{ "numero": "101", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
+
+### P3. Crear habitación con token de HUÉSPED → 403 FORBIDDEN
+POST http://localhost:3000/habitaciones
+Authorization: Bearer {{loginHuesped.response.body.token}}
+Content-Type: application/json
+
+{ "numero": "101", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
+
+### P4. Crear habitación con token de ADMIN → 201
+POST http://localhost:3000/habitaciones
+Authorization: Bearer {{loginAdmin.response.body.token}}
+Content-Type: application/json
+
+{ "numero": "101", "tipo": "doble", "capacidad": 2, "precioPorNoche": 85000 }
+
+### P5. Reservas SIN token → 401
+GET http://localhost:3000/reservas
+
+### P6. Crear reserva con token de HUÉSPED → 201 (y la notificación en la terminal)
+POST http://localhost:3000/reservas
+Authorization: Bearer {{loginHuesped.response.body.token}}
+Content-Type: application/json
+
+{ "habitacionId": 1, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-10", "fechaSalida": "2026-12-15" }
+
+### P6b. Reserva con token de HUÉSPED en la habitación 101 → 201 + notificación
+POST http://localhost:3000/reservas
+Authorization: Bearer {{loginHuesped.response.body.token}}
+Content-Type: application/json
+
+{ "habitacionId": 2, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-10", "fechaSalida": "2026-12-15" }
+
+### P7. Borrar habitación con token de HUÉSPED → 403
+DELETE http://localhost:3000/habitaciones/1
+Authorization: Bearer {{loginHuesped.response.body.token}}
+
+### P8. Borrar habitación con token de ADMIN, teniendo reservas → 409 (la regla de negocio sigue vigente)
+DELETE http://localhost:3000/habitaciones/1
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### P6b. Reserva con token de HUÉSPED en la habitación 101 → 201 + notificación
+POST http://localhost:3000/reservas
+Authorization: Bearer {{loginHuesped.response.body.token}}
+Content-Type: application/json
+
+{ "habitacionId": 2, "huesped": "Ana Pérez", "emailHuesped": "ana@mail.com", "fechaEntrada": "2026-12-10", "fechaSalida": "2026-12-15" }
+
+### Ver las reservas de la habitación 101
+GET http://localhost:3000/reservas?habitacionId=2
+Authorization: Bearer {{loginHuesped.response.body.token}}

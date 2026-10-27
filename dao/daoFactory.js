@@ -1,6 +1,7 @@
 import config from "../config/config.js";
 import habitacionesMemoryDao from "./habitacionesMemoryDao.js";
 import reservasMemoryDao from "./reservasMemoryDao.js";
+import usuariosMemoryDao from "./usuariosMemoryDao.js";
 
 async function createDaos() {
   switch (config.persistenceType) {
@@ -8,6 +9,7 @@ async function createDaos() {
       return {
         habitacionDao: habitacionesMemoryDao,
         reservaDao: reservasMemoryDao,
+        usuarioDao: usuariosMemoryDao,
       };
 
     case "sequelize": {
@@ -15,12 +17,14 @@ async function createDaos() {
       const { sequelize } = await import("./models/index.js");
       const { default: habitacionesSequelizeDao } = await import("./habitacionesSequelizeDao.js");
       const { default: reservasSequelizeDao } = await import("./reservasSequelizeDao.js");
+      const { default: usuariosSequelizeDao } = await import("./usuariosSequelizeDao.js");
 
       await sequelize.sync();
 
       return {
         habitacionDao: habitacionesSequelizeDao,
         reservaDao: reservasSequelizeDao,
+        usuarioDao: usuariosSequelizeDao,
       };
     }
 

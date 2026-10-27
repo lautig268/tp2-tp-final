@@ -7,18 +7,35 @@ import {
   listarHabitacionesQuerySchema,
 } from "../schemas/habitacionSchema.js";
 
-function makeHabitacionesRouter(controller) {
+function makeHabitacionesRouter(controller, { authenticate, authorize }) {
   const router = Router();
 
+  // Públicas
   router.get("/", validate({ query: listarHabitacionesQuerySchema }), controller.list);
   router.get("/:id", validate({ params: idParamSchema }), controller.get);
-  router.post("/", validate({ body: crearHabitacionSchema }), controller.create);
+
+  // Solo admin
+  router.post(
+    "/",
+    authenticate,
+    authorize("admin"),
+    validate({ body: crearHabitacionSchema }),
+    controller.create
+  );
   router.put(
     "/:id",
+    authenticate,
+    authorize("admin"),
     validate({ params: idParamSchema, body: actualizarHabitacionSchema }),
     controller.update
   );
-  router.delete("/:id", validate({ params: idParamSchema }), controller.remove);
+  router.delete(
+    "/:id",
+    authenticate,
+    authorize("admin"),
+    validate({ params: idParamSchema }),
+    controller.remove
+  );
 
   return router;
 }

@@ -7,8 +7,11 @@ import {
   listarReservasQuerySchema,
 } from "../schemas/reservaSchema.js";
 
-function makeReservasRouter(controller) {
+function makeReservasRouter(controller, { authenticate }) {
   const router = Router();
+
+  // Todas las rutas de reservas requieren un usuario autenticado
+  router.use(authenticate);
 
   router.get("/", validate({ query: listarReservasQuerySchema }), controller.list);
   router.get("/:id", validate({ params: idParamSchema }), controller.get);
