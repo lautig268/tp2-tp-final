@@ -23,6 +23,8 @@ import makeAuthRouter from "../routes/authRoutes.js";
 import makeHabitacionesRouter from "../routes/habitacionesRoutes.js";
 import makeReservasRouter from "../routes/reservasRoutes.js";
 
+import makeDocsRouter from "../docs/docsRouter.js";
+
 async function buildContainer() {
   // 1. Persistencia: la factory elige según PERSISTENCE_TYPE
   const { habitacionDao, reservaDao, usuarioDao } = await createDaos();
@@ -55,6 +57,7 @@ async function buildContainer() {
 
   // 6. Router principal con las rutas montadas
   const router = Router();
+  router.use("/api-docs", makeDocsRouter());
   router.use("/auth", makeAuthRouter(authController, auth));
   router.use("/habitaciones", makeHabitacionesRouter(habitacionesController, auth));
   router.use("/reservas", makeReservasRouter(reservasController, auth));

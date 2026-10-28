@@ -1,0 +1,730 @@
+openapi: 3.0.3
+info:
+  title: Hotel API
+  version: 1.0.0
+  description: API REST para gestionar las habitaciones y reservas de un hotel pequeño.
+servers:
+  - url: http://localhost:3000
+    description: Servidor local
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrar un huésped
+      description: Crea una cuenta nueva. El rol siempre es `huesped`, aunque el cliente mande otro.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Usuario creado (sin la contraseña).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Ya existe un usuario con ese email.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: EMAIL_DUPLICADO
+                  message: Ya existe un usuario con el email ana@mail.com
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión
+      description: Devuelve un token JWT para usar en las rutas protegidas. Dura 1 hora.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login correcto.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Email o contraseña incorrectos. El mensaje es el mismo en ambos casos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: INVALID_CREDENTIALS
+                  message: Email o contraseña incorrectos
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Ver mi perfil
+      description: Devuelve el usuario dueño del token.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Perfil del usuario autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /habitaciones:
+    get:
+      tags: [Habitaciones]
+      summary: Listar habitaciones
+      description: Público. Permite filtrar por tipo.
+      parameters:
+        - name: tipo
+          in: query
+          required: false
+          description: Filtra por tipo de habitación.
+          schema:
+            type: string
+            enum: [simple, doble, suite]
+      responses:
+        "200":
+          description: Lista de habitaciones (puede estar vacía).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Habitacion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    post:
+      tags: [Habitaciones]
+      summary: Crear una habitación
+      description: Solo `admin`. El número de habitación no puede repetirse.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HabitacionInput"
+      responses:
+        "201":
+          description: Habitación creada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Habitacion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Ya existe una habitación con ese número.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: NUMERO_DUPLICADO
+                  message: Ya existe una habitación con el número 101
+
+  /habitaciones/{id}:
+    get:
+      tags: [Habitaciones]
+      summary: Obtener una habitación por id
+      description: Público.
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: La habitación pedida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Habitacion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Habitaciones]
+      summary: Actualizar una habitación
+      description: Solo `admin`. Se envían solo los campos a modificar. Si cambia el número, no puede coincidir con el de otra habitación.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HabitacionUpdate"
+      responses:
+        "200":
+          description: Habitación actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Habitacion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: El nuevo número ya pertenece a otra habitación.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: NUMERO_DUPLICADO
+                  message: Ya existe una habitación con el número 102
+    delete:
+      tags: [Habitaciones]
+      summary: Eliminar una habitación
+      description: Solo `admin`. No se puede eliminar una habitación que tenga reservas, canceladas incluidas.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "204":
+          description: Habitación eliminada (sin contenido).
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: La habitación tiene reservas asociadas.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: HABITACION_CON_RESERVAS
+                  message: "No se puede eliminar la habitación 101: tiene 1 reserva(s) asociada(s)"
+  /reservas:
+    get:
+      tags: [Reservas]
+      summary: Listar reservas
+      description: Un huésped ve solo sus propias reservas (el filtro `usuarioId` se fuerza a su id, aunque pida otro). El admin ve todas y puede filtrar por usuario.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: habitacionId
+          in: query
+          required: false
+          description: Filtra por habitación.
+          schema:
+            type: integer
+            minimum: 1
+        - name: usuarioId
+          in: query
+          required: false
+          description: Filtra por dueño. Solo tiene efecto para el admin.
+          schema:
+            type: integer
+            minimum: 1
+        - name: estado
+          in: query
+          required: false
+          description: Filtra por estado.
+          schema:
+            type: string
+            enum: [confirmada, cancelada]
+      responses:
+        "200":
+          description: Lista de reservas (puede estar vacía).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reserva"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Reservas]
+      summary: Crear una reserva
+      description: La reserva queda a nombre del usuario del token y nace `confirmada`. No se puede reservar una habitación en fechas que se superponen con otra reserva confirmada (entrar el día que otro sale sí está permitido). Emite el evento `reserva.confirmada`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservaInput"
+      responses:
+        "201":
+          description: Reserva creada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /reservas/{id}:
+    get:
+      tags: [Reservas]
+      summary: Obtener una reserva por id
+      description: Un huésped solo puede ver sus propias reservas. El admin puede ver cualquiera.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: La reserva pedida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: La reserva pertenece a otro usuario.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: No tenés permiso para acceder a esta reserva
+        "404":
+          description: La reserva no existe.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: RESERVA_NO_ENCONTRADA
+                  message: No existe la reserva con id 99
+    put:
+      tags: [Reservas]
+      summary: Actualizar una reserva
+      description: Permite cambiar el huésped, su email y el estado (por ejemplo, cancelar). Las fechas no se modifican. Reactivar una reserva cancelada vuelve a chequear que las fechas sigan libres. Solo el dueño o el admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservaUpdate"
+      responses:
+        "200":
+          description: Reserva actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: La reserva pertenece a otro usuario.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: No tenés permiso para acceder a esta reserva
+        "404":
+          description: La reserva no existe.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: RESERVA_NO_ENCONTRADA
+                  message: No existe la reserva con id 99
+        "409":
+          description: No se puede reactivar la reserva porque otra ocupó esas fechas.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: FECHAS_OCUPADAS
+                  message: "No se puede reactivar la reserva: otra reserva ocupó esas fechas"
+    delete:
+      tags: [Reservas]
+      summary: Eliminar una reserva
+      description: Borra la reserva del historial. Para solo liberar las fechas conviene cancelarla (PUT con estado cancelada). Solo el dueño o el admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "204":
+          description: Reserva eliminada (sin contenido).
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: La reserva pertenece a otro usuario.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: No tenés permiso para acceder a esta reserva
+        "404":
+          description: La reserva no existe.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: RESERVA_NO_ENCONTRADA
+                  message: No existe la reserva con id 99
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token obtenido en POST /auth/login. Se envía en el header Authorization.
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      description: Identificador numérico del recurso.
+      schema:
+        type: integer
+        minimum: 1
+        example: 1
+
+  schemas:
+    Habitacion:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        numero:
+          type: string
+          example: "101"
+        tipo:
+          type: string
+          enum: [simple, doble, suite]
+          example: doble
+        capacidad:
+          type: integer
+          minimum: 1
+          example: 2
+        precioPorNoche:
+          type: number
+          example: 85000
+    HabitacionInput:
+      type: object
+      required: [numero, tipo, capacidad, precioPorNoche]
+      properties:
+        numero:
+          type: string
+          example: "101"
+        tipo:
+          type: string
+          enum: [simple, doble, suite]
+          example: doble
+        capacidad:
+          type: integer
+          minimum: 1
+          example: 2
+        precioPorNoche:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          example: 85000
+    HabitacionUpdate:
+      type: object
+      minProperties: 1
+      description: Se puede enviar uno o más campos. El body no puede estar vacío.
+      properties:
+        numero:
+          type: string
+          example: "102"
+        tipo:
+          type: string
+          enum: [simple, doble, suite]
+        capacidad:
+          type: integer
+          minimum: 1
+        precioPorNoche:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          example: 90000
+    Reserva:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        habitacionId:
+          type: integer
+          example: 1
+        usuarioId:
+          type: integer
+          description: Usuario dueño de la reserva (el que la creó).
+          example: 2
+        huesped:
+          type: string
+          example: Ana Pérez
+        emailHuesped:
+          type: string
+          format: email
+          example: ana@mail.com
+        fechaEntrada:
+          type: string
+          format: date
+          example: "2026-12-10"
+        fechaSalida:
+          type: string
+          format: date
+          example: "2026-12-15"
+        estado:
+          type: string
+          enum: [confirmada, cancelada]
+          example: confirmada
+    ReservaInput:
+      type: object
+      required: [habitacionId, huesped, emailHuesped, fechaEntrada, fechaSalida]
+      description: La fecha de salida debe ser posterior a la de entrada. El dueño y el estado los asigna el sistema.
+      properties:
+        habitacionId:
+          type: integer
+          minimum: 1
+          example: 1
+        huesped:
+          type: string
+          example: Ana Pérez
+        emailHuesped:
+          type: string
+          format: email
+          example: ana@mail.com
+        fechaEntrada:
+          type: string
+          format: date
+          example: "2026-12-10"
+        fechaSalida:
+          type: string
+          format: date
+          example: "2026-12-15"
+    ReservaUpdate:
+      type: object
+      minProperties: 1
+      description: Las fechas no se pueden modificar. Para cambiarlas se cancela la reserva y se crea otra.
+      properties:
+        huesped:
+          type: string
+          example: Ana Pérez
+        emailHuesped:
+          type: string
+          format: email
+          example: ana@mail.com
+        estado:
+          type: string
+          enum: [confirmada, cancelada]
+          example: cancelada
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        nombre:
+          type: string
+          example: Ana Pérez
+        email:
+          type: string
+          format: email
+          example: ana@mail.com
+        rol:
+          type: string
+          enum: [huesped, admin]
+          example: huesped
+    RegisterInput:
+      type: object
+      required: [nombre, email, password]
+      properties:
+        nombre:
+          type: string
+          example: Ana Pérez
+        email:
+          type: string
+          format: email
+          example: ana@mail.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          format: password
+          example: Clave12345
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: ana@mail.com
+        password:
+          type: string
+          format: password
+          example: Clave12345
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT para enviar en el header Authorization.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: "#/components/schemas/Usuario"
+    ErrorDetail:
+      type: object
+      properties:
+        origen:
+          type: string
+          enum: [params, query, body]
+          example: body
+        campo:
+          type: string
+          example: capacidad
+        mensaje:
+          type: string
+          example: La capacidad mínima es 1
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: VALIDACION
+            message:
+              type: string
+              example: Datos inválidos
+            details:
+              type: array
+              description: Solo aparece en los errores de validación (400).
+              items:
+                $ref: "#/components/schemas/ErrorDetail"
+
+  responses:
+    BadRequest:
+      description: Datos inválidos (error de validación).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: VALIDACION
+              message: Datos inválidos
+              details:
+                - origen: body
+                  campo: capacidad
+                  mensaje: La capacidad mínima es 1
+    Unauthorized:
+      description: Falta el token, o es inválido o está vencido.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: TOKEN_MISSING
+              message: "Falta el header Authorization: Bearer <token>"
+    Forbidden:
+      description: El usuario está autenticado pero no tiene permiso.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: FORBIDDEN
+              message: No tenés permiso para realizar esta acción
+    NotFound:
+      description: El recurso no existe.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: HABITACION_NO_ENCONTRADA
+              message: No existe la habitación con id 99
+    Conflict:
+      description: Conflicto con una regla de negocio.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: FECHAS_OCUPADAS
+              message: La habitación 101 ya está reservada en esas fechas

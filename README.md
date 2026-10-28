@@ -66,6 +66,13 @@ Para ejecutar sin reinicio automático: `npm start`.
 | `PORT` | Puerto del servidor | `3000` |
 | `PERSISTENCE_TYPE` | `memory` o `sequelize` | `memory` |
 | `DB_STORAGE` | Ruta del archivo SQLite (solo modo `sequelize`) | `./database.sqlite` |
+| `JWT_SECRET` | Secreto para firmar tokens (mínimo 32 caracteres). Obligatorio | — |
+| `JWT_EXPIRES_IN` | Duración del token | `1h` |
+| `BCRYPT_ROUNDS` | Costo del hash de contraseñas | `10` |
+| `ADMIN_EMAIL` | Email del administrador inicial | — |
+| `ADMIN_PASSWORD` | Contraseña del administrador inicial | — |
+
+Para generar un `JWT_SECRET`: `node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"`
 
 ## Cambiar de persistencia
 
@@ -78,7 +85,24 @@ Para cambiar, editá `PERSISTENCE_TYPE` en el `.env` y **reiniciá el servidor**
 
 ## Documentación de la API
 
-_(a completar: Swagger en `/api-docs`)_
+Swagger UI está en **`/api-docs`** (por ejemplo, `http://localhost:3000/api-docs`). Documenta todos los endpoints con parámetros, ejemplos y respuestas (200, 201, 204, 400, 401, 403, 404 y 409), y permite probarlos con "Try it out".
+
+La documentación está en `docs/openapi.yaml`. Si se modifica, hay que reiniciar el servidor.
+
+Para probar rutas protegidas: ejecutá `POST /auth/login`, copiá el `token`, tocá **Authorize** y pegalo (sin escribir "Bearer").
+
+## Autenticación y permisos
+
+Las contraseñas se guardan con hash (bcrypt) y la sesión usa tokens JWT en el header `Authorization: Bearer <token>`. Al arrancar se crea un administrador con `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
+
+| Recurso | Quién puede |
+|---|---|
+| `POST /auth/register`, `POST /auth/login` | Cualquiera. El registro siempre crea un `huesped` |
+| `GET /habitaciones` y `GET /habitaciones/:id` | Cualquiera |
+| Crear, editar y eliminar habitaciones | Solo `admin` |
+| `/reservas` | Usuarios autenticados |
+
+Cada reserva pertenece a quien la creó: un huésped solo ve y modifica las suyas (si intenta otra, recibe 403). El admin accede a todas.
 
 ## Eventos
 
